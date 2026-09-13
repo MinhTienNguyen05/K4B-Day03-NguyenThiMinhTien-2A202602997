@@ -36,27 +36,27 @@ class MockOfflineProvider(BaseLLMProvider):
 
     def generate_with_tools(self, prompt: str, tools_schema: List[Dict[str, Any]], system_prompt: str = "") -> Dict[str, Any]:
         prompt_lower = prompt.lower()
-        
-        # Mô phỏng nhận diện intent gọi Tool
-        if "sv2026001" in prompt_lower and "đặt lịch" in prompt_lower:
+
+        # Mô phỏng nhận diện intent gọi Tool cho bài toán Data Pipeline
+        if "restart" in prompt_lower or "dừng" in prompt_lower or "khởi động" in prompt_lower:
             return {
                 "type": "tool_call",
-                "tool_name": "schedule_appointment",
-                "arguments": {"student_id": "SV2026001", "datetime_str": "14:00 15/09/2026", "advisor_name": "PGS.TS Nguyễn Văn A"},
-                "thought": "Người dùng yêu cầu đặt lịch hẹn tư vấn cho sinh viên SV2026001. Tôi sẽ gọi tool schedule_appointment."
+                "tool_name": "control_kafka_crawler",
+                "arguments": {"crawler_name": "gold_api_poller", "action": "restart"},
+                "thought": "Người dùng yêu cầu can thiệp tiến trình crawler. Tôi sẽ gọi tool control_kafka_crawler."
             }
-        elif "sv2026001" in prompt_lower or "tra cứu" in prompt_lower:
+        elif "kiểm tra" in prompt_lower or "tra cứu" in prompt_lower or "đang bị trễ" in prompt_lower:
             return {
                 "type": "tool_call",
-                "tool_name": "academic_query",
-                "arguments": {"student_id": "SV2026001"},
-                "thought": "Người dùng muốn tra cứu thông tin học vụ của sinh viên SV2026001. Tôi sẽ gọi tool academic_query."
+                "tool_name": "query_clickhouse_metrics",
+                "arguments": {"metric_type": "gold_price", "time_range": "30m"},
+                "thought": "Người dùng muốn tra cứu metrics trong Database. Tôi sẽ gọi tool query_clickhouse_metrics."
             }
         else:
             return {
                 "type": "text",
-                "content": f"[Mock Agent Response]: Xin chào! Quy chế học vụ VinUni yêu cầu sinh viên tích lũy tối thiểu 120 tín chỉ và duy trì GPA trên 2.0 để tốt nghiệp.",
-                "thought": "Câu hỏi chung về quy chế học vụ, trả lời trực tiếp không cần gọi Tool."
+                "content": f"[Mock Agent Response]: Hệ thống streaming hiện tại cho phép bạn giám sát dữ liệu giá vàng (gold_price) và tỷ giá (exchange_rate), cũng như điều khiển các tiến trình đẩy Kafka.",
+                "thought": "Câu hỏi chung về hệ thống, trả lời trực tiếp không cần gọi Tool."
             }
 
 
@@ -82,13 +82,13 @@ class GeminiProvider(BaseLLMProvider):
         if not self.api_key or self.api_key == "your_gemini_api_key_here":
             print("ℹ️ [Gemini Provider]: Chưa tìm thấy GEMINI_API_KEY hợp lệ. Tự động chuyển sang Mock Offline.")
             return MockOfflineProvider().generate_with_tools(prompt, tools_schema, system_prompt)
-        
+
         try:
             from google import genai
             from google.genai import types
 
             client = genai.Client(api_key=self.api_key)
-            
+
             # Chuẩn hóa function declarations cho Gemini SDK
             function_declarations = []
             for tool in tools_schema:
@@ -214,7 +214,7 @@ class OpenAIProvider(BaseLLMProvider):
 def get_llm_provider() -> BaseLLMProvider:
     """Factory function khởi tạo Provider theo LLM_PROVIDER env variable"""
     provider_type = os.getenv("LLM_PROVIDER", "gemini").lower()
-    
+
     if provider_type == "gemini":
         key = os.getenv("GEMINI_API_KEY")
         if key and key != "your_gemini_api_key_here":

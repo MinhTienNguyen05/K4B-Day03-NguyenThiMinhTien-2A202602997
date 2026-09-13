@@ -1,0 +1,37 @@
+[
+  {
+    "id": "TC01",
+    "type": "direct_query",
+    "question": "Bạn có thể quản lý các tiến trình thu thập dữ liệu nào trong hệ thống streaming hiện tại?",
+    "expected_behavior": "Chatbot trả lời trực tiếp dựa trên System Prompt, liệt kê khả năng giám sát dữ liệu giá vàng và tỷ giá.",
+    "complexity": "Low"
+  },
+  {
+    "id": "TC02",
+    "type": "single_tool_query",
+    "question": "Kiểm tra giúp tôi số lượng bản ghi giá vàng (gold_price) được đẩy vào ClickHouse trong 30 phút qua.",
+    "expected_behavior": "Agent gọi Tool 'query_clickhouse_metrics' với tham số metric_type='gold_price' và time_range='30m'.",
+    "complexity": "Medium"
+  },
+  {
+    "id": "TC03",
+    "type": "action_trigger",
+    "question": "Hãy dừng ngay tiến trình crawler tỷ giá ngoại tệ (exchange_rate_poller).",
+    "expected_behavior": "Agent gọi Tool 'control_kafka_crawler' với tham số crawler_name='exchange_rate_poller' và action='stop'.",
+    "complexity": "Medium"
+  },
+  {
+    "id": "TC04",
+    "type": "multi_step_reasoning",
+    "question": "Tra cứu xem luồng dữ liệu giá vàng có đang bị trễ không (kiểm tra 30 phút qua). Nếu không có dữ liệu, hãy tự động restart lại tiến trình thu thập giá vàng (gold_api_poller).",
+    "expected_behavior": "Agent suy luận ReAct đa bước: (1) Gọi 'query_clickhouse_metrics', (2) Nhận thấy data rỗng, (3) Quyết định gọi 'control_kafka_crawler' để restart.",
+    "complexity": "High"
+  },
+  {
+    "id": "TC05",
+    "type": "edge_case_handling",
+    "question": "Hãy khởi động tiến trình thu thập giá chứng khoán quốc tế (stock_poller).",
+    "expected_behavior": "Agent gọi tool khởi động nhưng nhận về lỗi NOT_FOUND do crawler 'stock_poller' chưa được khai báo, sau đó trả lời người dùng một cách chính xác mà không bịa đặt (hallucinate).",
+    "complexity": "Medium"
+  }
+]

@@ -1,29 +1,133 @@
 [
   {
     "step": 1,
-    "query": "Chào bạn, bạn có thể giới thiệu quy chế học vụ cơ bản của Đại học VinUni không?",
+    "query": "Bạn có thể quản lý các tiến trình thu thập dữ liệu nào trong hệ thống streaming hiện tại?",
     "action_type": "FINAL_ANSWER",
-    "thought": "Câu hỏi chung về quy chế học vụ, trả lời trực tiếp không cần gọi Tool.",
-    "output": "[Mock Agent Response]: Xin chào! Quy chế học vụ VinUni yêu cầu sinh viên tích lũy tối thiểu 120 tín chỉ và duy trì GPA trên 2.0 để tốt nghiệp.",
-    "latency_ms": 2845.93
+    "thought": "Gemini phản hồi trực tiếp bằng văn bản (không cần gọi công cụ).",
+    "output": "Chào bạn! Trong hệ thống streaming hiện tại của chúng ta, các tiến trình thu thập dữ liệu (Kafka Crawlers / Pollers) mà tôi có thể quản lý bao gồm:\n\n1. **`gold_api_poller`**: Tiến trình chuyên thu thập dữ liệu giá vàng thời gian thực và đẩy vào hệ thống.\n2. **`exchange_rate_poller`**: Tiến trình chuyên thu thập dữ liệu tỷ giá ngoại tệ thời gian thực và đẩy vào hệ thống.\n\nTôi có thể thực hiện các thao tác kiểm tra trạng thái/metric của các dữ liệu này qua ClickHouse cũng như điều khiển (`start`, `stop`, `restart`) các tiến trình trên theo yêu cầu của bạn. Bạn có muốn kiểm tra hệ thống hay thực hiện thao tác nào không?",
+    "latency_ms": 2319.17
   },
   {
     "step": 1,
-    "query": "Hãy tra cứu thông tin học vụ của sinh viên SV2026001.",
+    "query": "Kiểm tra giúp tôi số lượng bản ghi giá vàng (gold_price) được đẩy vào ClickHouse trong 30 phút qua.",
     "action_type": "TOOL_EXECUTION",
-    "tool_name": "academic_query",
+    "tool_name": "query_clickhouse_metrics",
     "arguments": {
-      "student_id": "SV2026001"
+      "metric_type": "gold_price",
+      "time_range": "30m"
     },
-    "observation": {},
-    "latency_ms": 799.12
+    "observation": {
+      "status": "SUCCESS",
+      "metric": "gold_price",
+      "time_range": "30m",
+      "data": {
+        "record_count": 0,
+        "avg_latency_ms": 0,
+        "status": "NO_DATA_LAG"
+      }
+    },
+    "latency_ms": 1276.08
   },
   {
     "step": 2,
-    "query": "Hãy tra cứu thông tin học vụ của sinh viên SV2026001.",
+    "query": "Kiểm tra giúp tôi số lượng bản ghi giá vàng (gold_price) được đẩy vào ClickHouse trong 30 phút qua.\n[Observation từ query_clickhouse_metrics]: {\"status\": \"SUCCESS\", \"metric\": \"gold_price\", \"time_range\": \"30m\", \"data\": {\"record_count\": 0, \"avg_latency_ms\": 0, \"status\": \"NO_DATA_LAG\"}}\nDựa vào kết quả trên, hãy thực hiện hành động tiếp theo hoặc đưa ra câu trả lời cuối cùng.",
     "action_type": "FINAL_ANSWER",
-    "thought": "Tổng hợp kết quả từ MCP Server thành công.",
-    "output": "Chưa thể trả lời chi tiết do chưa nhận được dữ liệu từ MCP Server (hãy hoàn thành TODO 2.1).",
-    "latency_ms": 10.0
+    "thought": "Gemini phản hồi trực tiếp bằng văn bản (không cần gọi công cụ).",
+    "output": "Dựa trên kết quả kiểm tra từ hệ thống, trong 30 phút qua, số lượng bản ghi giá vàng (`gold_price`) được đẩy vào ClickHouse là **0** (không có dữ liệu mới, trạng thái: `NO_DATA_LAG`). \n\nĐiều này cho thấy tiến trình lấy dữ liệu giá vàng đang không có bản ghi nào được ghi nhận. Bạn có cần tôi khởi động lại tiến trình đẩy dữ liệu (crawler) của giá vàng không?",
+    "latency_ms": 1149.03
+  },
+  {
+    "step": 1,
+    "query": "Hãy dừng ngay tiến trình crawler tỷ giá ngoại tệ (exchange_rate_poller).",
+    "action_type": "TOOL_EXECUTION",
+    "tool_name": "control_kafka_crawler",
+    "arguments": {
+      "crawler_name": "exchange_rate_poller",
+      "action": "stop"
+    },
+    "observation": {
+      "status": "SUCCESS",
+      "crawler": "exchange_rate_poller",
+      "current_state": "STOPPED",
+      "message": "Đã dừng tiến trình exchange_rate_poller."
+    },
+    "latency_ms": 842.19
+  },
+  {
+    "step": 2,
+    "query": "Hãy dừng ngay tiến trình crawler tỷ giá ngoại tệ (exchange_rate_poller).\n[Observation từ control_kafka_crawler]: {\"status\": \"SUCCESS\", \"crawler\": \"exchange_rate_poller\", \"current_state\": \"STOPPED\", \"message\": \"Đã dừng tiến trình exchange_rate_poller.\"}\nDựa vào kết quả trên, hãy thực hiện hành động tiếp theo hoặc đưa ra câu trả lời cuối cùng.",
+    "action_type": "FINAL_ANSWER",
+    "thought": "Gemini phản hồi trực tiếp bằng văn bản (không cần gọi công cụ).",
+    "output": "Tiến trình crawler tỷ giá ngoại tệ (`exchange_rate_poller`) đã được dừng thành công theo yêu cầu của bạn. \n\n**Trạng thái hiện tại:** `STOPPED`  \n**Thông báo từ hệ thống:** Đã dừng tiến trình exchange_rate_poller.",
+    "latency_ms": 1810.56
+  },
+  {
+    "step": 1,
+    "query": "Tra cứu xem luồng dữ liệu giá vàng có đang bị trễ không (kiểm tra 30 phút qua). Nếu không có dữ liệu, hãy tự động restart lại tiến trình thu thập giá vàng (gold_api_poller).",
+    "action_type": "TOOL_EXECUTION",
+    "tool_name": "query_clickhouse_metrics",
+    "arguments": {
+      "time_range": "30m",
+      "metric_type": "gold_price"
+    },
+    "observation": {
+      "status": "SUCCESS",
+      "metric": "gold_price",
+      "time_range": "30m",
+      "data": {
+        "record_count": 0,
+        "avg_latency_ms": 0,
+        "status": "NO_DATA_LAG"
+      }
+    },
+    "latency_ms": 1082.72
+  },
+  {
+    "step": 2,
+    "query": "Tra cứu xem luồng dữ liệu giá vàng có đang bị trễ không (kiểm tra 30 phút qua). Nếu không có dữ liệu, hãy tự động restart lại tiến trình thu thập giá vàng (gold_api_poller).\n[Observation từ query_clickhouse_metrics]: {\"status\": \"SUCCESS\", \"metric\": \"gold_price\", \"time_range\": \"30m\", \"data\": {\"record_count\": 0, \"avg_latency_ms\": 0, \"status\": \"NO_DATA_LAG\"}}\nDựa vào kết quả trên, hãy thực hiện hành động tiếp theo hoặc đưa ra câu trả lời cuối cùng.",
+    "action_type": "TOOL_EXECUTION",
+    "tool_name": "control_kafka_crawler",
+    "arguments": {
+      "action": "restart",
+      "crawler_name": "gold_api_poller"
+    },
+    "observation": {
+      "status": "SUCCESS",
+      "crawler": "gold_api_poller",
+      "current_state": "RUNNING",
+      "message": "Đã restart thành công tiến trình gold_api_poller."
+    },
+    "latency_ms": 934.51
+  },
+  {
+    "step": 3,
+    "query": "Tra cứu xem luồng dữ liệu giá vàng có đang bị trễ không (kiểm tra 30 phút qua). Nếu không có dữ liệu, hãy tự động restart lại tiến trình thu thập giá vàng (gold_api_poller).\n[Observation từ query_clickhouse_metrics]: {\"status\": \"SUCCESS\", \"metric\": \"gold_price\", \"time_range\": \"30m\", \"data\": {\"record_count\": 0, \"avg_latency_ms\": 0, \"status\": \"NO_DATA_LAG\"}}\nDựa vào kết quả trên, hãy thực hiện hành động tiếp theo hoặc đưa ra câu trả lời cuối cùng.\n[Observation từ control_kafka_crawler]: {\"status\": \"SUCCESS\", \"crawler\": \"gold_api_poller\", \"current_state\": \"RUNNING\", \"message\": \"Đã restart thành công tiến trình gold_api_poller.\"}\nDựa vào kết quả trên, hãy thực hiện hành động tiếp theo hoặc đưa ra câu trả lời cuối cùng.",
+    "action_type": "FINAL_ANSWER",
+    "thought": "Gemini phản hồi trực tiếp bằng văn bản (không cần gọi công cụ).",
+    "output": "**Thought:** \nDựa trên kết quả quan sát (Observation) từ hệ thống:\n1. **Kiểm tra dữ liệu ClickHouse (30 phút qua):** Luồng dữ liệu `gold_price` trả về `record_count: 0` và trạng thái `NO_DATA_LAG` (không có bản ghi dữ liệu mới được đẩy vào hệ thống, dẫn đến hiện tượng trễ/gián đoạn dữ liệu).\n2. **Hành động khắc phục:** Theo yêu cầu, hệ thống đã tiến hành gọi công cụ `control_kafka_crawler` để restart tiến trình `gold_api_poller`. Kết quả trả về `SUCCESS` và tiến trình hiện đang ở trạng thái `RUNNING`.\n\n**Câu trả lời cuối cùng:**\nLuồng dữ liệu giá vàng trong 30 phút qua đã bị gián đoạn (không có bản ghi mới được ghi nhận trong ClickHouse). Hệ thống đã tự động thực hiện lệnh khởi động lại (`restart`) thành công tiến trình thu thập dữ liệu **`gold_api_poller`**. Hiện tại tiến trình đang chạy (`RUNNING`) và hệ thống sẽ tiếp tục theo dõi để đảm bảo dữ liệu được đồng bộ trở lại.",
+    "latency_ms": 1643.44
+  },
+  {
+    "step": 1,
+    "query": "Hãy khởi động tiến trình thu thập giá chứng khoán quốc tế (stock_poller).",
+    "action_type": "TOOL_EXECUTION",
+    "tool_name": "control_kafka_crawler",
+    "arguments": {
+      "action": "start",
+      "crawler_name": "stock_poller"
+    },
+    "observation": {
+      "status": "NOT_FOUND",
+      "message": "Tiến trình crawler 'stock_poller' không tồn tại trong hệ thống."
+    },
+    "latency_ms": 856.58
+  },
+  {
+    "step": 2,
+    "query": "Hãy khởi động tiến trình thu thập giá chứng khoán quốc tế (stock_poller).\n[Observation từ control_kafka_crawler]: {\"status\": \"NOT_FOUND\", \"message\": \"Tiến trình crawler 'stock_poller' không tồn tại trong hệ thống.\"}\nDựa vào kết quả trên, hãy thực hiện hành động tiếp theo hoặc đưa ra câu trả lời cuối cùng.",
+    "action_type": "FINAL_ANSWER",
+    "thought": "Gemini phản hồi trực tiếp bằng văn bản (không cần gọi công cụ).",
+    "output": "Thought: Tiến trình `stock_poller` không tồn tại trong hệ thống (như đã phản hồi ở observation). Do đó, không thể thực hiện việc khởi động tiến trình này. Tôi cần thông báo lại cho người dùng về việc này.\n\nFinal Answer: Tiến trình thu thập dữ liệu `stock_poller` không tồn tại trong hệ thống. Vui lòng kiểm tra lại tên của tiến trình crawler.",
+    "latency_ms": 1240.29
   }
 ]
